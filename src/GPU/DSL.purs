@@ -1,6 +1,7 @@
 module GPU.DSL
    where
 
+import Data.Array (intercalate)
 import Prelude
 
 type Name = String
@@ -68,12 +69,16 @@ instance condBool :: BooleanAlgebra Cond
 
 data Statement = 
     Var Name
+  | Set Name Expression
+  | Vset Name Expression
   | Assign Name Expression
   | For Name Int Int Block
   | IF Cond Block Block
+  | IF' Cond Block
   | While Cond Block
+  | Function Name (Array Name) Block
 
-data Block = S Statement Block | Return Expression | End
+data Block = S Statement Block | Return Expression | End | Break
 
 instance showCond :: Show Cond where
   show = case _ of
@@ -96,14 +101,20 @@ instance showBlock :: Show Block where
         S stm rest -> show stm <> "; " <> go rest
         Return res -> "return " <> show res <> ";"
         End  -> ""
+        Break -> "break;"
 
 instance showStm :: Show Statement where
   show = case _ of 
     Var n          -> "var " <> n
+    Set n e        -> n <> " = " <> show e
+    Vset n s       -> "var " <> n <> " = " <> show s
     Assign n expr  -> n <> " = " <> show expr
-    For index from to body  -> "for (var " <> index <> " = " <> show from <> "; i <= " <> show to <> "; i++) " <> show body
+    For index from to body  -> "for (var " <> index <> " = " <> show from <> "; " <> index <> "<= " <> show to <> "; " <> index <> "++) " <> show body
     IF cond pos neg         -> "if (" <> show cond <> ") " <> show pos <> " else " <> show neg
+    IF' cond pos            -> "if (" <> show cond <> ") " <> show pos
     While cond body         -> "while (" <> show cond <> ") " <> show body
+    Function name [] body   -> "function " <> name <> " () " <> show body
+    Function name args body -> "function " <> name <> " ("<> intercalate ", " args  <>") " <> show body
 
 instance showExpr :: Show Expression where
   show = case _ of
@@ -158,4 +169,22 @@ i = read "i"
 call :: Name -> Expression
 call = Call 
 
+function :: Name -> Array Name -> Block -> Statement
+function = Function
+
+break :: Block
+break = Break
+
+vset :: Name -> Expression -> Statement
+vset = Vset
+
+sqr :: Expression -> Expression
+sqr exp = Apply2 "Math.pow" exp (Num 2.0)
+
+sqrt :: Expression -> Expression
+sqrt exp = Apply1 "Math.sqrt" exp 
+
 infixr 0 S as :
+infixr 1 set as <--
+infixr 0 mod as %
+

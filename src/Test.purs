@@ -5,6 +5,8 @@ import Data.Maybe (Maybe (..))
 import GPU
 import Prelude 
 
+def = { dimensions: [1] }
+
 identity :: ∀ a. Show a => a -> a
 identity = makeK1 opts body "x"
   where opts = def

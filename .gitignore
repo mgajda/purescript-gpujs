@@ -20,6 +20,3 @@ core-tests/full-core-docs.md
 .psc-ide-port
 .psc-package/
 purescript.cabal
-gpujs/
-index.html
-main.js
