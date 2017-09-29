@@ -5,7 +5,7 @@ import Data.Maybe (Maybe (..))
 import GPU
 import Prelude 
 
-def = { dimensions: [1] }
+def = { output: [1] }
 
 identity :: ∀ a. Show a => a -> a
 identity = makeK1 opts body "x"
@@ -41,7 +41,7 @@ testIf = makeK2 def (show body) "a" "b"
 matMult :: Matrix -> Matrix -> Matrix
 matMult n m = makeK2 opts (show body) "A" "B" n m
   where
-    opts = def { dimensions = [d1, d2] }
+    opts = def { output = [d1, d2] }
 
     d2 = length n
     d1 = case (m !! 0) of

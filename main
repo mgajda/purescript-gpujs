@@ -34715,11 +34715,13 @@ var PS = {};
       return function (arg1) {
         return function (arg2) {
           return function (arg3) {
-            var kernel = gpu.createKernel (new Function( arg1, arg2, arg3, body), opts )
+            var kernel = gpu.createKernel (new Function( arg1, arg2, arg3, body), opts ) 
             return function (par1) {
               return function (par2) {
                 return function (par3) {
-                  return kernel (par1, par2, par3)
+                  var result = kernel (par1, par2, par3)
+                  console.log (result)
+                  return result
                 }
               }
             }
@@ -36047,25 +36049,31 @@ var PS = {};
   var Prelude = PS["Prelude"];
   var Signal = PS["Signal"];
   var Signal_Time = PS["Signal.Time"];        
+  var ssys = 10;
   var redraw = function (sys) {
       return Data_Foldable.traverse_(Control_Monad_Eff.applicativeEff)(Data_Foldable.foldableArray)($foreign.putCircle)(sys);
   };
-  var randomSystem = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(100)(function __do() {
+  var randomSystem = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(ssys)(function __do() {
       var v = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(2)(Control_Monad_Eff_Random.randomRange(0.0)(600.0)))();
       var v2 = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(2)(Control_Monad_Eff_Random.randomRange(0.0)(600.0)))();
-      var v3 = Control_Monad_Eff_Random.randomRange(1.0)(1.0e-2)();
+      var v3 = Control_Monad_Eff_Random.randomRange(1.0)(100000.0)();
       return {
           m: v3, 
           v: v, 
           q: v2
       };
   }));
+  var main = function __do() {
+      var v = randomSystem();
+      return Control_Monad_Eff_Console.logShow(Data_Show.showInt)(Data_Array.length(v))();
+  };
+  var dt = 0.1;
   var kernel = (function () {
       var opts = {
-          output: [ 2, 2, 100 ], 
+          output: [ ssys, 2, 2 ], 
           mode: "gpu"
       };
-      var body = new GPU_DSL.S(GPU_DSL.vset("f1")(Data_Semiring.zero(GPU_DSL.exprSemiRing)), new GPU_DSL.S(GPU_DSL.vset("f2")(Data_Semiring.zero(GPU_DSL.exprSemiRing)), new GPU_DSL.S(GPU_DSL["var"]("d1"), new GPU_DSL.S(GPU_DSL["var"]("d2"), new GPU_DSL.S(GPU_DSL["var"]("r"), new GPU_DSL.S(GPU_DSL.vset("pf")(Data_Semiring.zero(GPU_DSL.exprSemiRing)), new GPU_DSL.S(new GPU_DSL.IF(new GPU_DSL.Eq(GPU_DSL.ThreadY.value, Data_Semiring.zero(GPU_DSL.exprSemiRing)), new GPU_DSL.S(new GPU_DSL.For("body", 0, 100, new GPU_DSL.S(new GPU_DSL.IF(new GPU_DSL.Eq(GPU_DSL.read("body"), GPU_DSL.ThreadX.value), GPU_DSL["break"], new GPU_DSL.S(GPU_DSL.set("d1")(Data_Ring.sub(GPU_DSL.exprRing)(GPU_DSL.at2("positions")(GPU_DSL.read("body"))(Data_Semiring.zero(GPU_DSL.exprSemiRing)))(GPU_DSL.at2("positions")(GPU_DSL.ThreadX.value)(Data_Semiring.zero(GPU_DSL.exprSemiRing)))), new GPU_DSL.S(GPU_DSL.set("d2")(Data_Ring.sub(GPU_DSL.exprRing)(GPU_DSL.at2("positions")(GPU_DSL.read("body"))(Data_Semiring.one(GPU_DSL.exprSemiRing)))(GPU_DSL.at2("positions")(GPU_DSL.ThreadX.value)(Data_Semiring.one(GPU_DSL.exprSemiRing)))), new GPU_DSL.S(GPU_DSL.set("r")(GPU_DSL.sqrt(Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.sqr(GPU_DSL.read("d1")))(GPU_DSL.sqr(GPU_DSL.read("d2"))))), new GPU_DSL.S(GPU_DSL.set("d1")(Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(GPU_DSL.read("d1"))(GPU_DSL.read("r"))), new GPU_DSL.S(GPU_DSL.set("d2")(Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(GPU_DSL.read("d2"))(GPU_DSL.read("r"))), new GPU_DSL.S(GPU_DSL.set("pf")(Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(Data_Semiring.mul(GPU_DSL.exprSemiRing)(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.at("masses")(GPU_DSL.read("body")))(GPU_DSL.at("masses")(GPU_DSL.ThreadX.value)))(new GPU_DSL.Num(6.674e-11)))(GPU_DSL.sqr(GPU_DSL.read("r")))), new GPU_DSL.S(GPU_DSL.set("f1")(Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.read("f1"))(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.read("d1"))(GPU_DSL.read("pf")))), new GPU_DSL.S(GPU_DSL.set("f2")(Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.read("f2"))(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.read("d2"))(GPU_DSL.read("pf")))), GPU_DSL.end))))))))), new GPU_DSL.S(new GPU_DSL.IF(new GPU_DSL.Eq(GPU_DSL.ThreadZ.value, Data_Semiring.zero(GPU_DSL.exprSemiRing)), GPU_DSL["return"](Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(GPU_DSL.read("f1"))(GPU_DSL.at("masses")(GPU_DSL.ThreadX.value))), GPU_DSL["return"](Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(GPU_DSL.read("f2"))(GPU_DSL.at("masses")(GPU_DSL.ThreadX.value)))), GPU_DSL.end))), GPU_DSL.end), new GPU_DSL.S(new GPU_DSL.IF(new GPU_DSL.Eq(GPU_DSL.ThreadZ.value, Data_Semiring.zero(GPU_DSL.exprSemiRing)), GPU_DSL["return"](Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.at2("positions")(GPU_DSL.ThreadX.value)(Data_Semiring.zero(GPU_DSL.exprSemiRing)))(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.at2("velocities")(GPU_DSL.ThreadX.value)(Data_Semiring.zero(GPU_DSL.exprSemiRing)))(new GPU_DSL.Num(0.1)))), GPU_DSL["return"](Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.at2("positions")(GPU_DSL.ThreadX.value)(Data_Semiring.one(GPU_DSL.exprSemiRing)))(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.at2("velocities")(GPU_DSL.ThreadX.value)(Data_Semiring.one(GPU_DSL.exprSemiRing)))(new GPU_DSL.Num(0.1))))), GPU_DSL.end)), GPU_DSL.end)))))));
+      var body = new GPU_DSL.S(GPU_DSL.vset("f1")(Data_Semiring.zero(GPU_DSL.exprSemiRing)), new GPU_DSL.S(GPU_DSL.vset("f2")(Data_Semiring.zero(GPU_DSL.exprSemiRing)), new GPU_DSL.S(GPU_DSL["var"]("d1"), new GPU_DSL.S(GPU_DSL["var"]("d2"), new GPU_DSL.S(GPU_DSL["var"]("r"), new GPU_DSL.S(GPU_DSL.vset("pf")(Data_Semiring.zero(GPU_DSL.exprSemiRing)), new GPU_DSL.S(new GPU_DSL.IF(new GPU_DSL.Eq(GPU_DSL.ThreadY.value, Data_Semiring.zero(GPU_DSL.exprSemiRing)), new GPU_DSL.S(new GPU_DSL.For("body", 0, ssys, new GPU_DSL.S(new GPU_DSL.IF(new GPU_DSL.Eq(GPU_DSL.read("body"), GPU_DSL.ThreadX.value), GPU_DSL["break"], new GPU_DSL.S(GPU_DSL.set("d1")(Data_Ring.sub(GPU_DSL.exprRing)(GPU_DSL.at2("positions")(GPU_DSL.read("body"))(Data_Semiring.zero(GPU_DSL.exprSemiRing)))(GPU_DSL.at2("positions")(GPU_DSL.ThreadX.value)(Data_Semiring.zero(GPU_DSL.exprSemiRing)))), new GPU_DSL.S(GPU_DSL.set("d2")(Data_Ring.sub(GPU_DSL.exprRing)(GPU_DSL.at2("positions")(GPU_DSL.read("body"))(Data_Semiring.one(GPU_DSL.exprSemiRing)))(GPU_DSL.at2("positions")(GPU_DSL.ThreadX.value)(Data_Semiring.one(GPU_DSL.exprSemiRing)))), new GPU_DSL.S(GPU_DSL.set("r")(GPU_DSL.sqrt(Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.sqr(GPU_DSL.read("d1")))(GPU_DSL.sqr(GPU_DSL.read("d2"))))), new GPU_DSL.S(GPU_DSL.set("d1")(Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(GPU_DSL.read("d1"))(GPU_DSL.read("r"))), new GPU_DSL.S(GPU_DSL.set("d2")(Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(GPU_DSL.read("d2"))(GPU_DSL.read("r"))), new GPU_DSL.S(GPU_DSL.set("pf")(Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(Data_Semiring.mul(GPU_DSL.exprSemiRing)(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.at("masses")(GPU_DSL.read("body")))(GPU_DSL.at("masses")(GPU_DSL.ThreadX.value)))(new GPU_DSL.Num(6.674e-11)))(GPU_DSL.sqr(GPU_DSL.read("r")))), new GPU_DSL.S(GPU_DSL.set("f1")(Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.read("f1"))(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.read("d1"))(GPU_DSL.read("pf")))), new GPU_DSL.S(GPU_DSL.set("f2")(Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.read("f2"))(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.read("d2"))(GPU_DSL.read("pf")))), GPU_DSL.end))))))))), new GPU_DSL.S(new GPU_DSL.IF(new GPU_DSL.Eq(GPU_DSL.ThreadZ.value, Data_Semiring.zero(GPU_DSL.exprSemiRing)), GPU_DSL["return"](Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(GPU_DSL.read("f1"))(GPU_DSL.at("masses")(GPU_DSL.ThreadX.value))), GPU_DSL["return"](Data_EuclideanRing.div(GPU_DSL.exprEuclRing)(GPU_DSL.read("f2"))(GPU_DSL.at("masses")(GPU_DSL.ThreadX.value)))), GPU_DSL.end))), GPU_DSL.end), new GPU_DSL.S(new GPU_DSL.IF(new GPU_DSL.Eq(GPU_DSL.ThreadZ.value, Data_Semiring.zero(GPU_DSL.exprSemiRing)), GPU_DSL["return"](Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.at2("positions")(GPU_DSL.ThreadX.value)(Data_Semiring.zero(GPU_DSL.exprSemiRing)))(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.at2("velocities")(GPU_DSL.ThreadX.value)(Data_Semiring.zero(GPU_DSL.exprSemiRing)))(new GPU_DSL.Num(dt)))), GPU_DSL["return"](Data_Semiring.add(GPU_DSL.exprSemiRing)(GPU_DSL.at2("positions")(GPU_DSL.ThreadX.value)(Data_Semiring.one(GPU_DSL.exprSemiRing)))(Data_Semiring.mul(GPU_DSL.exprSemiRing)(GPU_DSL.at2("velocities")(GPU_DSL.ThreadX.value)(Data_Semiring.one(GPU_DSL.exprSemiRing)))(new GPU_DSL.Num(dt))))), GPU_DSL.end)), GPU_DSL.end)))))));
       return GPU.makeK3(opts)(Data_Show.show(GPU_DSL.showBlock)(body))("masses")("velocities")("positions");
   })();
   var step = function (sys) {
@@ -36097,14 +36105,12 @@ var PS = {};
       };
       return Data_Array.zipWith(goback)(masses)(out);
   };
-  var main = function __do() {
-      var v = randomSystem();
-      return Signal.runSignal(Signal.squigglyMap(Signal.functorSignal)(redraw)(Signal.foldp(Data_Function.apply)(v)(Signal.sampleOn(Signal_Time.every(0.33))(Signal.constant(step)))))();
-  };
+  exports["dt"] = dt;
   exports["kernel"] = kernel;
   exports["main"] = main;
   exports["randomSystem"] = randomSystem;
   exports["redraw"] = redraw;
+  exports["ssys"] = ssys;
   exports["step"] = step;
   exports["clearSvg"] = $foreign.clearSvg;
   exports["putCircle"] = $foreign.putCircle;

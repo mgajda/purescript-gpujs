@@ -7,7 +7,7 @@ import GPU.DSL
 
 foreign import data  Kernel :: Type -> Type
 
-type Options o = { dimensions :: Array Int | o }
+type Options o = { output :: Array Int | o }
 
 foreign import makeK0 :: ∀ o a. Options o -> String -> a
 foreign import makeK1 :: ∀ o a b. Options o -> String -> Name -> a -> b

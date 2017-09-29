@@ -37,10 +37,11 @@ exports.makeK3 = function (opts) {
     return function (arg1) {
       return function (arg2) {
         return function (arg3) {
+          var kernel = gpu.createKernel (new Function (arg1, arg2, arg3, body), opts )
           return function (par1) {
             return function (par2) {
               return function (par3) {
-                return gpu.createKernel (new Function (arg1, arg2, arg3, body), { dimensions: [100,2,2]} ) (par1, par2, par3)
+                return kernel (par1, par2, par3)
               }
             }
           }
