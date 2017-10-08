@@ -1,25 +1,27 @@
 "use strict"
 
-exports.clearSvg = function () {
-  return function () {
-    var node = document.getElementById ("mySVG")
-    while (node.firstChild) {
-      node.removeChild (node.firdsChild)
+var ctx = document.getElementById ("canvas").getContext("2d")
+
+var draw = function (body) {
+  ctx.beginPath ()
+  ctx.arc (body[0][0], body [0][1], 6, 0, 6.29)
+  ctx.stroke ()
+}
+var clear = function () {
+  ctx.clearRect (0, 0, 1300, 800)
+}
+  
+
+exports.animate = function (step) {
+  return function again (sys) { 
+    return function () {
+      clear()
+      console.log (sys)
+      setTimeout (again (step (sys)), 300)
+      sys.coords.forEach (draw) 
     }
   }
 }
 
-var svgNS = "http://www.w3.org/2000/svg";
+      
 
-exports.putCircle = function (body) {
-  return function () {
-    var myCircle = document.createElementNS(svgNS,"circle");
-    myCircle.setAttributeNS(null,"cx",body.q [0]);
-    myCircle.setAttributeNS(null,"cy",body.q [1]);
-    myCircle.setAttributeNS(null,"r",6);
-    myCircle.setAttributeNS(null,"fill","black");
-    myCircle.setAttributeNS(null,"stroke","none");
-
-    document.getElementById("mySVG").appendChild(myCircle);
-  }
-}

@@ -3,15 +3,18 @@ module Test where
 import Data.Array (length, (!!))
 import Data.Maybe (Maybe (..))
 import GPU
-import Prelude 
+import Prelude (class Show, show, discard, bind, ($))
+import Data.Ring as Ring
 
+def :: { output :: Array Int }
 def = { output: [1] }
 
 identity :: ∀ a. Show a => a -> a
-identity = makeK1 opts body "x"
-  where opts = def
-        body = show (return $ read "x")
-  
+identity = 
+  let x = Variable "x"
+   in kernel1 def x $ do
+        return x
+
 
 testMultMatrix :: String
 testMultMatrix = show $ a `matMult` b
@@ -29,29 +32,34 @@ testMultMatrix = show $ a `matMult` b
 type Matrix = Array (Array Int)
 
 testIf :: Number -> Number -> Array Number
-testIf = makeK2 def (show body) "a" "b"
-  where
-    body = 
-        var "res" 
-      : IF (read "a" `Gt` Num 23.0) 
-           (set "res" (read "a") : end)
-           (set "res" (read "b") : end)
-      : return (read "res")
+testIf = 
+  let a = Variable "a"
+      b = Variable "b"
+   in kernel2 def a b $ do
+        res <- var "res"
+        if' (a > 23) 
+          do res <-- a
+          do res <-- b
+        return res
 
 matMult :: Matrix -> Matrix -> Matrix
-matMult n m = makeK2 opts (show body) "A" "B" n m
-  where
-    opts = def { output = [d1, d2] }
+matMult n m = 
+  let a = Variable "a"
+      b = Variable "b"
 
-    d2 = length n
-    d1 = case (m !! 0) of
-              Just x -> length x
-              Nothing -> 0
+      d2 = length n
+      d1 = case (m !! 0) of
+                Just x -> length x
+                Nothing -> 0
 
-    i = read "i"
-    body =
-        var "sum"
-      : set "sum" zero
-      : For "i" 0 (d1 - 1)
-          (set "sum" (read "sum" + at2 "A" ThreadY i * at2 "B" i ThreadX) : end)
-      : return (read "sum") 
+      opts = def { output = [d1, d2] }
+
+      i = Variable "i"
+
+      kern = kernel2 opts a b $ do
+        sum <- vset "sum" 0
+        for i 0 (Ring.sub d1 1) $
+          sum += at2 a thready i * at2 b i threadx
+        return sum
+
+   in kern n m
