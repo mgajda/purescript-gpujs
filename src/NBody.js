@@ -2,13 +2,17 @@
 
 var ctx = document.getElementById ("canvas").getContext("2d")
 
-var draw = function (body) {
+function scale (x) { return 0.1 * Math.log (x) }
+
+function draw (body, mass) {
+
   ctx.beginPath ()
-  ctx.arc (body[0][0], body [0][1], 6, 0, 6.29)
+  ctx.arc (body [0][0], body [0][1], scale (mass) , 0, 6.29)
   ctx.stroke ()
 }
-var clear = function () {
-  ctx.clearRect (0, 0, 1300, 800)
+
+function clear () {
+  ctx.clearRect (0, 0, 1300, 1300)
 }
   
 
@@ -17,11 +21,10 @@ exports.animate = function (step) {
     return function () {
       clear()
       console.log (sys)
-      setTimeout (again (step (sys)), 300)
-      sys.coords.forEach (draw) 
+
+      requestAnimationFrame (again (step (sys)))
+      for (var b = 0; b < sys.coords.length; b++)
+        draw (sys.coords [b], sys.masses [b])
     }
   }
 }
-
-      
-

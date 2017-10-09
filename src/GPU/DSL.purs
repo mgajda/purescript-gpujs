@@ -51,6 +51,7 @@ data Statement =
   | Function String (Array String) Block
   | Return Expr
   | Break
+  | Idle
 
 instance showCond :: Render Cond where
   render = case _ of
@@ -74,6 +75,7 @@ instance showBlock :: Render a => Render (Array a) where
 instance showStm :: Render Statement where
   render = case _ of 
     Break          -> "break"
+    Idle           -> ""
     Return e       -> "return " <> render e
     Var n          -> "var " <> n <> ";"
     Set n e        -> n <> " = " <> render e

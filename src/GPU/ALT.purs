@@ -159,6 +159,9 @@ apply3 n a b c = App3 n (toExpr a) (toExpr b) (toExpr c)
 sqr :: ∀ a. ToExpr a => a -> Expr
 sqr e = apply2 "Math.pow" e 2
 
+pow :: ∀ a p. ToExpr a => ToExpr p => a -> p -> Expr
+pow a p = apply2 "Math.pow" a p
+
 sqrt :: ∀ a. ToExpr a => a -> Expr
 sqrt = App1 "Math.sqrt" <<< toExpr
 
@@ -168,3 +171,6 @@ threadz = Variable "this.thread.z"
 
 infixr 1 set as <--
 infixr 2 if' as ?
+
+idle :: Script
+idle = tell [Idle]

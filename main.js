@@ -14613,6 +14613,13 @@ var PS = {};
       Break.value = new Break();
       return Break;
   })();
+  var Idle = (function () {
+      function Idle() {
+
+      };
+      Idle.value = new Idle();
+      return Idle;
+  })();
   var Render = function (render) {
       this.render = render;
   };
@@ -14673,7 +14680,7 @@ var PS = {};
       if (v instanceof Ind3) {
           return v.value0 + ("[" + (render(showExpr)(v.value1) + ("][" + (render(showExpr)(v.value2) + ("][" + (render(showExpr)(v.value3) + "]"))))));
       };
-      throw new Error("Failed pattern match at GPU.DSL line 88, column 12 - line 106, column 91: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at GPU.DSL line 90, column 12 - line 108, column 91: " + [ v.constructor.name ]);
   });
   var showCond = new Render(function (v) {
       if (v instanceof Gt) {
@@ -14709,11 +14716,14 @@ var PS = {};
       if (v instanceof False) {
           return "false";
       };
-      throw new Error("Failed pattern match at GPU.DSL line 56, column 12 - line 69, column 1: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at GPU.DSL line 57, column 12 - line 70, column 1: " + [ v.constructor.name ]);
   });
   var showStm = new Render(function (v) {
       if (v instanceof Break) {
           return "break";
+      };
+      if (v instanceof Idle) {
+          return "";
       };
       if (v instanceof Return) {
           return "return " + render(showExpr)(v.value0);
@@ -14742,7 +14752,7 @@ var PS = {};
       if (v instanceof $$Function) {
           return "function " + (v.value0 + (" (" + (Data_Foldable.intercalate(Data_Foldable.foldableArray)(Data_Monoid.monoidString)(", ")(v.value1) + (") " + render(showBlock(showStm))(v.value2)))));
       };
-      throw new Error("Failed pattern match at GPU.DSL line 75, column 12 - line 85, column 106: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at GPU.DSL line 76, column 12 - line 87, column 106: " + [ v.constructor.name ]);
   });
   exports["Gt"] = Gt;
   exports["Ge"] = Ge;
@@ -14779,6 +14789,7 @@ var PS = {};
   exports["Function"] = $$Function;
   exports["Return"] = Return;
   exports["Break"] = Break;
+  exports["Idle"] = Idle;
   exports["Render"] = Render;
   exports["render"] = render;
   exports["showCond"] = showCond;
@@ -14843,8 +14854,8 @@ var PS = {};
   var thready = "this.thread.y";
   var threadx = "this.thread.x";
   var sqrt = function (dictToExpr) {
-      return function ($101) {
-          return GPU_DSL.App1.create("Math.sqrt")(toExpr(dictToExpr)($101));
+      return function ($103) {
+          return GPU_DSL.App1.create("Math.sqrt")(toExpr(dictToExpr)($103));
       };
   };
   var set = function (dictToExpr) {
@@ -14855,8 +14866,8 @@ var PS = {};
       };
   };
   var $$return = function (dictToExpr) {
-      return function ($102) {
-          return Control_Monad_Writer_Class.tell(Control_Monad_Writer_Trans.monadTellWriterT(Data_Monoid.monoidArray)(Data_Identity.monadIdentity))(Data_Array.singleton(GPU_DSL.Return.create(toExpr(dictToExpr)($102))));
+      return function ($104) {
+          return Control_Monad_Writer_Class.tell(Control_Monad_Writer_Trans.monadTellWriterT(Data_Monoid.monoidArray)(Data_Identity.monadIdentity))(Data_Array.singleton(GPU_DSL.Return.create(toExpr(dictToExpr)($104))));
       };
   };
   var not = GPU_DSL.Not.create;
@@ -14869,6 +14880,7 @@ var PS = {};
           };
       };
   };
+  var idle = Control_Monad_Writer_Class.tell(Control_Monad_Writer_Trans.monadTellWriterT(Data_Monoid.monoidArray)(Data_Identity.monadIdentity))([ GPU_DSL.Idle.value ]);
   var $$for = function (v) {
       return function (from) {
           return function (to) {
@@ -15006,8 +15018,8 @@ var PS = {};
   };
   var at = function (dictToExpr) {
       return function (v) {
-          return function ($103) {
-              return GPU_DSL.Ind1.create(v)(toExpr(dictToExpr)($103));
+          return function ($105) {
+              return GPU_DSL.Ind1.create(v)(toExpr(dictToExpr)($105));
           };
       };
   };
@@ -15075,6 +15087,15 @@ var PS = {};
           };
       };
   };
+  var pow = function (dictToExpr) {
+      return function (dictToExpr1) {
+          return function (a) {
+              return function (p) {
+                  return apply2(dictToExpr)(dictToExpr1)("Math.pow")(a)(p);
+              };
+          };
+      };
+  };
   var sqr = function (dictToExpr) {
       return function (e) {
           return apply2(dictToExpr)(eint)("Math.pow")(e)(2);
@@ -15133,6 +15154,7 @@ var PS = {};
   exports["function3"] = function3;
   exports["ge"] = ge;
   exports["gt"] = gt;
+  exports["idle"] = idle;
   exports["if'"] = if$prime;
   exports["le"] = le;
   exports["lt"] = lt;
@@ -15140,6 +15162,7 @@ var PS = {};
   exports["mul"] = mul;
   exports["ne"] = ne;
   exports["not"] = not;
+  exports["pow"] = pow;
   exports["return"] = $$return;
   exports["set"] = set;
   exports["setdiv"] = setdiv;
@@ -15273,13 +15296,17 @@ var PS = {};
 
   var ctx = document.getElementById ("canvas").getContext("2d")
 
-  var draw = function (body) {
+  function scale (x) { return 0.1 * Math.log (x) }
+
+  function draw (body, mass) {
+
     ctx.beginPath ()
-    ctx.arc (body[0][0], body [0][1], 6, 0, 6.29)
+    ctx.arc (body [0][0], body [0][1], scale (mass) , 0, 6.29)
     ctx.stroke ()
   }
-  var clear = function () {
-    ctx.clearRect (0, 0, 1300, 800)
+
+  function clear () {
+    ctx.clearRect (0, 0, 1300, 1300)
   }
   
 
@@ -15288,8 +15315,10 @@ var PS = {};
       return function () {
         clear()
         console.log (sys)
-        setTimeout (again (step (sys)), 300)
-        sys.coords.forEach (draw) 
+
+        requestAnimationFrame (again (step (sys)))
+        for (var b = 0; b < sys.coords.length; b++)
+          draw (sys.coords [b], sys.masses [b])
       }
     }
   }
@@ -15318,13 +15347,15 @@ var PS = {};
   var Data_Unit = PS["Data.Unit"];
   var GPU = PS["GPU"];
   var GPU_ALT = PS["GPU.ALT"];
+  var $$Math = PS["Math"];
   var Prelude = PS["Prelude"];        
+  var ssys = 1000;
   var randomSystem = (function () {
-      var masses = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(100)(Control_Monad_Eff_Random.randomRange(1.0)(100.0)));
-      var coords = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(100)(function __do() {
-          var v = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(2)(Control_Monad_Eff_Random.randomRange(0.0)(600.0)))();
-          var v2 = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(2)(Control_Monad_Eff_Random.randomRange(0.0)(600.0)))();
-          return [ v2, v ];
+      var masses = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(ssys)(Control_Monad_Eff_Random.randomRange(0.0)(1.0e18)));
+      var coords = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(ssys)(function __do() {
+          var v = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(2)(Control_Monad_Eff_Random.randomRange(0.0)(1300.0)))();
+          var v1 = Data_Traversable.sequence(Data_Traversable.traversableArray)(Control_Monad_Eff.applicativeEff)(Data_Array.replicate(2)(Control_Monad_Eff_Random.randomRange(-100.0)(100.0)))();
+          return [ v, v1 ];
       }));
       return Control_Apply.apply(Control_Monad_Eff.applyEff)(Data_Functor.map(Control_Monad_Eff.functorEff)(function (v) {
           return function (v1) {
@@ -15335,67 +15366,74 @@ var PS = {};
           };
       })(masses))(coords);
   })();
+  var g = 6.674e-11;
+  var dt = 1.0e-4;
   var kernel = (function () {
       var opts = {
-          output: [ 2, 2, 100 ], 
+          output: [ 2, 2, ssys ], 
           mode: "gpu"
       };
       var mass = GPU_ALT.at(GPU_ALT.variableToExpression)("masses");
-      var pos = function (b) {
-          return function (c) {
-              return GPU_ALT.at3(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.eint)("coords")(b)(0)(c);
+      var pos = function (x1) {
+          return function (z) {
+              return GPU_ALT.at3(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.eint)("coords")(x1)(0)(z);
           };
       };
-      var vel = function (b) {
-          return function (c) {
-              return GPU_ALT.at3(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.eint)("coords")(b)(1)(c);
+      var vel = function (x1) {
+          return function (z) {
+              return GPU_ALT.at3(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.eint)("coords")(x1)(1)(z);
           };
       };
       var calculatingVelocities = GPU_ALT.eq(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.thready)(1);
-      return GPU.kernel2(opts)("masses")("coords")(Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.vset(GPU_ALT.eint)("v1")(0))(function (v) {
+      return GPU.kernel2(opts)("masses")("coords")(GPU_ALT["if'"](calculatingVelocities)(Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.vset(GPU_ALT.eint)("v1")(0))(function (v) {
           return Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.vset(GPU_ALT.eint)("v2")(0))(function (v2) {
               return Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT["var"]("d1"))(function (v3) {
                   return Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT["var"]("d2"))(function (v4) {
                       return Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT["var"]("r"))(function (v5) {
-                          return Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT["var"]("v"))(function (v6) {
-                              return GPU_ALT["if'"](calculatingVelocities)(Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT["for"]("body")(0)(100 - 1 | 0)(GPU_ALT["if'"](GPU_ALT.eq(GPU_ALT.variableToExpression)(GPU_ALT.variableToExpression)("body")(GPU_ALT.threadx))(GPU_ALT["break"])(Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.set(GPU_ALT["eval"])(v3)(GPU_ALT.sub(GPU_ALT["eval"])(GPU_ALT["eval"])(pos("body")(0))(pos(GPU_ALT.threadx)(0))))(function () {
-                                  return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.set(GPU_ALT["eval"])(v4)(GPU_ALT.sub(GPU_ALT["eval"])(GPU_ALT["eval"])(pos("body")(1))(pos(GPU_ALT.threadx)(1))))(function () {
-                                      return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.set(GPU_ALT["eval"])(v5)(GPU_ALT.sqrt(GPU_ALT["eval"])(GPU_ALT.add(GPU_ALT["eval"])(GPU_ALT["eval"])(GPU_ALT.sqr(GPU_ALT.variableToExpression)(v3))(GPU_ALT.sqr(GPU_ALT.variableToExpression)(v4)))))(function () {
-                                          return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.set(GPU_ALT["eval"])(v6)(GPU_ALT.div(GPU_ALT["eval"])(GPU_ALT["eval"])(GPU_ALT.mul(GPU_ALT["eval"])(GPU_ALT["enum"])(GPU_ALT.mul(GPU_ALT["enum"])(GPU_ALT["eval"])(3.1e-2)(mass("body")))(6.674e-11))(GPU_ALT.sqr(GPU_ALT.variableToExpression)(v5))))(function () {
-                                              return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.setplus(GPU_ALT["eval"])(v)(GPU_ALT.div(GPU_ALT["eval"])(GPU_ALT.variableToExpression)(GPU_ALT.mul(GPU_ALT.variableToExpression)(GPU_ALT.variableToExpression)(v6)(v3))(v5)))(function () {
-                                                  return GPU_ALT.setplus(GPU_ALT["eval"])(v2)(GPU_ALT.div(GPU_ALT["eval"])(GPU_ALT.variableToExpression)(GPU_ALT.mul(GPU_ALT.variableToExpression)(GPU_ALT.variableToExpression)(v6)(v4))(v5));
+                          return Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT["var"]("va"))(function (v6) {
+                              return Control_Bind.bind(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT["var"]("vr"))(function (v7) {
+                                  return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT["for"]("body")(0)(ssys - 1 | 0)(GPU_ALT["if'"](GPU_ALT.eq(GPU_ALT.variableToExpression)(GPU_ALT.variableToExpression)("body")(GPU_ALT.threadz))(GPU_ALT.idle)(Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.set(GPU_ALT["eval"])(v3)(GPU_ALT.sub(GPU_ALT["eval"])(GPU_ALT["eval"])(pos("body")(0))(pos(GPU_ALT.threadz)(0))))(function () {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.set(GPU_ALT["eval"])(v4)(GPU_ALT.sub(GPU_ALT["eval"])(GPU_ALT["eval"])(pos("body")(1))(pos(GPU_ALT.threadz)(1))))(function () {
+                                          return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.set(GPU_ALT["eval"])(v5)(GPU_ALT.sqrt(GPU_ALT["eval"])(GPU_ALT.add(GPU_ALT["eval"])(GPU_ALT["eval"])(GPU_ALT.sqr(GPU_ALT.variableToExpression)(v3))(GPU_ALT.sqr(GPU_ALT.variableToExpression)(v4)))))(function () {
+                                              return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.set(GPU_ALT["eval"])(v6)(GPU_ALT.div(GPU_ALT["eval"])(GPU_ALT["eval"])(GPU_ALT.mul(GPU_ALT["eval"])(GPU_ALT["enum"])(GPU_ALT.mul(GPU_ALT["enum"])(GPU_ALT["eval"])(dt)(mass("body")))(g))(GPU_ALT.sqr(GPU_ALT.variableToExpression)(v5))))(function () {
+                                                  return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Writer_Trans.bindWriterT(Data_Semigroup.semigroupArray)(Data_Identity.bindIdentity))(GPU_ALT.setplus(GPU_ALT["eval"])(v)(GPU_ALT.mul(GPU_ALT.variableToExpression)(GPU_ALT["eval"])(v6)(GPU_ALT.div(GPU_ALT.variableToExpression)(GPU_ALT.variableToExpression)(v3)(v5))))(function () {
+                                                      return GPU_ALT.setplus(GPU_ALT["eval"])(v2)(GPU_ALT.mul(GPU_ALT.variableToExpression)(GPU_ALT["eval"])(v6)(GPU_ALT.div(GPU_ALT.variableToExpression)(GPU_ALT.variableToExpression)(v4)(v5)));
+                                                  });
                                               });
                                           });
                                       });
+                                  }))))(function () {
+                                      return GPU_ALT["if'"](GPU_ALT.eq(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.threadx)(0))(GPU_ALT["return"](GPU_ALT["eval"])(GPU_ALT.add(GPU_ALT.variableToExpression)(GPU_ALT["eval"])(v)(vel(GPU_ALT.threadz)(0))))(GPU_ALT["return"](GPU_ALT["eval"])(GPU_ALT.add(GPU_ALT.variableToExpression)(GPU_ALT["eval"])(v2)(vel(GPU_ALT.threadz)(1))));
                                   });
-                              }))))(function () {
-                                  return GPU_ALT["if'"](GPU_ALT.eq(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.threadz)(0))(GPU_ALT["return"](GPU_ALT.variableToExpression)(v))(GPU_ALT["return"](GPU_ALT.variableToExpression)(v2));
-                              }))(GPU_ALT["if'"](GPU_ALT.eq(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.threadz)(0))(GPU_ALT["return"](GPU_ALT["eval"])(GPU_ALT.add(GPU_ALT["eval"])(GPU_ALT["eval"])(pos(GPU_ALT.threadx)(0))(GPU_ALT.mul(GPU_ALT["eval"])(GPU_ALT["enum"])(vel(GPU_ALT.threadx)(0))(3.1e-2))))(GPU_ALT["return"](GPU_ALT["eval"])(GPU_ALT.add(GPU_ALT["eval"])(GPU_ALT["eval"])(pos(GPU_ALT.threadx)(1))(GPU_ALT.mul(GPU_ALT["eval"])(GPU_ALT["enum"])(vel(GPU_ALT.threadx)(1))(3.1e-2)))));
+                              });
                           });
                       });
                   });
               });
           });
-      }));
+      }))(GPU_ALT["if'"](GPU_ALT.eq(GPU_ALT.variableToExpression)(GPU_ALT.eint)(GPU_ALT.threadx)(0))(GPU_ALT["return"](GPU_ALT["eval"])(GPU_ALT.add(GPU_ALT["eval"])(GPU_ALT["eval"])(pos(GPU_ALT.threadz)(0))(GPU_ALT.mul(GPU_ALT["eval"])(GPU_ALT["enum"])(vel(GPU_ALT.threadz)(0))(dt))))(GPU_ALT["return"](GPU_ALT["eval"])(GPU_ALT.add(GPU_ALT["eval"])(GPU_ALT["eval"])(pos(GPU_ALT.threadz)(1))(GPU_ALT.mul(GPU_ALT["eval"])(GPU_ALT["enum"])(vel(GPU_ALT.threadz)(1))(dt))))));
   })();
   var step = function (sys) {
-      var $20 = {};
-      for (var $21 in sys) {
-          if ({}.hasOwnProperty.call(sys, $21)) {
-              $20[$21] = sys[$21];
+      var $22 = {};
+      for (var $23 in sys) {
+          if ({}.hasOwnProperty.call(sys, $23)) {
+              $22[$23] = sys[$23];
           };
       };
-      $20.coords = kernel(sys.masses)(sys.coords);
-      return $20;
+      $22.coords = kernel(sys.masses)(sys.coords);
+      return $22;
   };
   var main = function __do() {
       var v = randomSystem();
       Data_Unit.unit;
       return $foreign.animate(step)(v)();
   };
+  exports["dt"] = dt;
+  exports["g"] = g;
   exports["kernel"] = kernel;
   exports["main"] = main;
   exports["randomSystem"] = randomSystem;
+  exports["ssys"] = ssys;
   exports["step"] = step;
   exports["animate"] = $foreign.animate;
 })(PS["NBody"] = PS["NBody"] || {});
